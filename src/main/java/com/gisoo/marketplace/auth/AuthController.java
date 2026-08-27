@@ -4,11 +4,7 @@ import com.gisoo.marketplace.common.response.ApiResponse;
 import com.gisoo.marketplace.user.User;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -31,5 +27,10 @@ public class AuthController {
                 "email", user.getEmail(),
                 "role", user.getRole().name()
         ));
+    }
+
+    @PostMapping("/login")
+    public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.success("Login successful", authService.login(request));
     }
 }
