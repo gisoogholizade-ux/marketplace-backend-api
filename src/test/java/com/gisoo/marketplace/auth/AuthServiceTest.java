@@ -1,5 +1,6 @@
 package com.gisoo.marketplace.auth;
 
+import com.gisoo.marketplace.security.JwtService;
 import com.gisoo.marketplace.user.User;
 import com.gisoo.marketplace.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,11 +23,14 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private JwtService jwtService;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder);
+        authService = new AuthService(userRepository, passwordEncoder, jwtService);
     }
 
     @Test
