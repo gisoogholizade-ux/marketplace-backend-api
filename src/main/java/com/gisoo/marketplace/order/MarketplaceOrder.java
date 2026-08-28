@@ -7,28 +7,22 @@ import java.time.Instant;
 @Entity
 @Table(name = "orders")
 public class MarketplaceOrder {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private Long customerId;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 24)
+    @Column(nullable = false) private Long customerId;
+    @Column(nullable = false, precision = 19, scale = 2) private BigDecimal totalAmount;
+    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 24)
     private OrderStatus status = OrderStatus.PENDING;
-
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    @Column(nullable = false, updatable = false) private Instant createdAt = Instant.now();
 
     protected MarketplaceOrder() {}
-
     public MarketplaceOrder(Long customerId, BigDecimal totalAmount) {
-        this.customerId = customerId;
-        this.totalAmount = totalAmount;
+        this.customerId = customerId; this.totalAmount = totalAmount;
+    }
+
+    public void markPaid() {
+        if (status != OrderStatus.PENDING) throw new IllegalStateException("Only pending orders can be paid");
+        status = OrderStatus.PAID;
     }
 
     public Long getId() { return id; }
