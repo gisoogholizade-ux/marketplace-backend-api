@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.gisoo</groupId>
     <artifactId>marketplace-backend-api</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <name>marketplace-backend-api</name>
     <description>Production-style multi-role marketplace REST API portfolio project</description>
     <properties><java.version>21</java.version></properties>
