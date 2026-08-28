@@ -4,24 +4,23 @@ import com.gisoo.marketplace.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/payments")
 public class PaymentController {
     private final PaymentService paymentService;
-
-    public PaymentController(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
+    public PaymentController(PaymentService paymentService) { this.paymentService = paymentService; }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<Payment> create(@Valid @RequestBody CreatePaymentRequest request) {
-        Payment payment = paymentService.create(
-                request.orderId(), request.amount(), request.transactionReference());
-        return ApiResponse.success("Payment created", payment);
+        return ApiResponse.success("Payment created", paymentService.create(request.orderId(), request.amount(), request.transactionReference()));
+    }
+
+    @PostMapping("/{paymentId}/capture")
+    public ApiResponse<Payment> capture(@PathVariable Long paymentId) {
+        return ApiResponse.success("Payment captured", paymentService.capture(paymentId));
     }
 
     @GetMapping("/order/{orderId}")
