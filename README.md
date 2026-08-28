@@ -12,7 +12,7 @@ A production-style REST API for a multi-role marketplace, built with **Java 21, 
 
 ## What this project demonstrates
 
-This repository is designed to show more than CRUD. It focuses on the engineering patterns used in real business systems: authentication, authorization, transactional workflows, validation, database migrations, API documentation, automated tests and CI.
+This repository is designed to show more than CRUD. It focuses on engineering patterns used in real business systems: authentication, authorization, transactional workflows, validation, database migrations, API documentation, automated tests and CI.
 
 ### Implemented
 
@@ -21,8 +21,12 @@ This repository is designed to show more than CRUD. It focuses on the engineerin
 - Stateless Spring Security authentication
 - Role model for CUSTOMER, SELLER and ADMIN
 - Public paginated product API
-- Order creation and customer order retrieval
-- Payment creation and order payment history
+- Order creation with customer validation
+- Customer order retrieval
+- Payment creation with order validation
+- Duplicate transaction-reference protection
+- Order payment history
+- Database foreign-key constraints
 - Global API error handling
 - DTO validation
 - MySQL persistence with Spring Data JPA
@@ -34,9 +38,9 @@ This repository is designed to show more than CRUD. It focuses on the engineerin
 - Docker Compose development environment
 - GitHub Actions CI on Java 21
 
-### Next domain modules
+### Future domain extensions
 
-Category, cart, checkout line-items, commission, settlement and reporting are intentionally tracked as future domain increments rather than being represented as fake completed features.
+Category, cart, checkout line-items, commission, settlement and reporting are intentionally kept as future modules rather than being presented as completed functionality.
 
 ## Architecture
 
@@ -177,7 +181,7 @@ Swagger UI:
 http://localhost:8080/swagger-ui.html
 ```
 
-The Compose environment starts MySQL first, waits for it to become healthy, then starts the API. Flyway creates the schema automatically.
+The Compose environment starts MySQL first, waits for it to become healthy, then starts the API. Flyway creates and upgrades the schema automatically.
 
 ## Run without Docker
 
@@ -204,7 +208,7 @@ mvn spring-boot:run
 mvn clean verify
 ```
 
-The test suite includes unit tests and an application integration test using an in-memory H2 database in MySQL compatibility mode. Flyway migrations are executed during integration testing so schema problems fail CI early.
+The test suite includes unit tests and application integration tests using an in-memory H2 database in MySQL compatibility mode. Flyway migrations are executed during integration testing so schema problems fail CI early.
 
 ## Database migrations
 
@@ -214,7 +218,7 @@ Production schema changes are versioned in:
 src/main/resources/db/migration
 ```
 
-Hibernate uses `ddl-auto=validate`; schema creation is owned by Flyway rather than automatic Hibernate updates.
+Hibernate uses `ddl-auto=validate`; schema creation is owned by Flyway rather than automatic Hibernate updates. Relational constraints enforce valid customer, seller, order and payment references at database level.
 
 ## CI
 
@@ -234,11 +238,13 @@ A green CI badge means the current main branch compiles and its automated test s
 - Authentication is stateless.
 - Secrets and DB credentials are supplied through environment variables.
 - Database changes are repeatable and reviewable through Flyway migrations.
+- Payment transaction references are protected against duplicates.
+- Service validation is backed by database-level relational constraints.
 - CI verifies the repository from a clean environment instead of relying on a developer machine.
 
 ## Current version
 
-**0.9.0-SNAPSHOT** — portfolio demo hardening before the first `v1.0.0` release.
+**1.0.0** — first portfolio-ready release.
 
 ## About the developer
 
