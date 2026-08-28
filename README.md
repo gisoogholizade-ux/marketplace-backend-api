@@ -6,76 +6,104 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
 
-A production-style REST API for a multi-role marketplace, built with **Java 21, Spring Boot, Spring Security, JWT, MySQL, Flyway, Docker and GitHub Actions**.
+A production-style REST API for a multi-role marketplace built with **Java 21, Spring Boot, Spring Security, JWT, MySQL, Flyway, Docker and GitHub Actions**.
 
 > Portfolio project by **Gisoo Gholizade — Java Backend Developer**. This repository is an original implementation and contains no proprietary company source code.
 
-## What this project demonstrates
+## Current version
 
-This repository is designed to show more than CRUD. It focuses on engineering patterns used in real business systems: authentication, authorization, transactional workflows, validation, database migrations, API documentation, automated tests and CI.
+**v1.1.0 — Marketplace Workflow Release**
 
-### Implemented
+## Implemented
 
 - User registration with validation and BCrypt password hashing
-- Login with JWT token generation
-- Stateless Spring Security authentication
-- Role model for CUSTOMER, SELLER and ADMIN
-- Public paginated product API
-- Order creation with customer validation
-- Customer order retrieval
-- Payment creation with order validation
-- Duplicate transaction-reference protection
-- Order payment history
-- Database foreign-key constraints
-- Global API error handling
-- DTO validation
-- MySQL persistence with Spring Data JPA
-- Flyway database migrations
-- Swagger / OpenAPI with Bearer JWT security scheme
-- Unit tests with JUnit 5 and Mockito
-- Integration tests with Spring Boot, MockMvc, H2 and Flyway
-- Multi-stage Docker image
-- Docker Compose development environment
+- Login and stateless JWT authentication
+- CUSTOMER, SELLER and ADMIN roles
+- Public paginated product catalog
+- Category management
+- Customer shopping cart with stock validation
+- Transactional checkout
+- Order and order-item creation
+- Inventory deduction during checkout
+- Payment records with unique transaction references
+- Payment capture workflow
+- Order transition from `PENDING` to `PAID`
+- Seller commission generation only after successful payment
+- Idempotent commission generation
+- Seller settlement creation from pending commissions
+- Admin marketplace summary reporting
+- Global API error handling and DTO validation
+- Flyway database migrations and relational constraints
+- Swagger / OpenAPI with Bearer JWT support
+- Unit and integration tests
+- Multi-stage Docker image and Docker Compose
 - GitHub Actions CI on Java 21
 
-### Future domain extensions
+## Business flow
 
-Category, cart, checkout line-items, commission, settlement and reporting are intentionally kept as future modules rather than being presented as completed functionality.
+```text
+Register / Login
+      ↓
+JWT Authentication
+      ↓
+Browse Products & Categories
+      ↓
+Add Products to Cart
+      ↓
+Checkout
+      ↓
+Order + Order Items
+      ↓
+Inventory Deduction
+      ↓
+Create Payment
+      ↓
+Capture Payment
+      ↓
+Order = PAID
+      ↓
+Seller Commission
+      ↓
+Settlement
+      ↓
+Admin Reporting
+```
 
 ## Architecture
 
 ```text
 Client / Swagger UI
-        |
-        v
+        ↓
 Spring Security + JWT Filter
-        |
-        v
+        ↓
 Controllers
-        |
-        v
+        ↓
 Services / Business Rules
-        |
-        v
+        ↓
 Spring Data JPA Repositories
-        |
-        v
+        ↓
 MySQL
-        |
-      Flyway
+        ↓
+Flyway Migrations
 ```
+
+Main modules:
 
 ```text
 src/main/java/com/gisoo/marketplace
 ├── auth
+├── cart
+├── category
+├── checkout
+├── commission
 ├── common
-│   ├── exception
-│   └── response
 ├── config
 ├── order
 ├── payment
 ├── product
+├── report
 ├── security
+├── settlement
 └── user
 ```
 
@@ -84,16 +112,17 @@ src/main/java/com/gisoo/marketplace
 | Route | Access |
 |---|---|
 | `/api/v1/auth/**` | Public |
-| `/api/v1/products/**` | Public |
-| `/swagger-ui/**` and `/v3/api-docs/**` | Public documentation |
+| `GET /api/v1/products/**` | Public |
+| `GET /api/v1/categories/**` | Public |
+| `POST /api/v1/categories/**` | ADMIN |
+| `/api/v1/cart/**` | Authenticated |
+| `/api/v1/checkout/**` | Authenticated |
 | `/api/v1/orders/**` | Authenticated |
 | `/api/v1/payments/**` | Authenticated |
 | `/api/v1/seller/**` | SELLER or ADMIN |
 | `/api/v1/admin/**` | ADMIN |
 
-Passwords are stored using BCrypt. The API is stateless and expects JWT Bearer tokens for protected endpoints.
-
-## API examples
+## Example API flow
 
 ### Register
 
@@ -112,40 +141,36 @@ Content-Type: application/json
 
 ```http
 POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "customer@example.com",
-  "password": "StrongPass123"
-}
 ```
 
-The response contains a JWT token. Send it to protected endpoints as:
+Use the returned token on protected endpoints:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-### Browse products
+### Add to cart
 
 ```http
-GET /api/v1/products?page=0&size=20
-```
-
-### Create an order
-
-```http
-POST /api/v1/orders
+POST /api/v1/cart/items
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
   "customerId": 1,
-  "totalAmount": 149.90
+  "productId": 10,
+  "quantity": 2
 }
 ```
 
-### Create a payment record
+### Checkout
+
+```http
+POST /api/v1/checkout/1
+Authorization: Bearer <token>
+```
+
+### Create payment
 
 ```http
 POST /api/v1/payments
@@ -159,9 +184,16 @@ Content-Type: application/json
 }
 ```
 
-## Run locally with Docker
+### Capture payment
 
-Requirements: Docker + Docker Compose.
+```http
+POST /api/v1/payments/1/capture
+Authorization: Bearer <token>
+```
+
+Capturing the payment marks the order as paid and creates seller commissions from the order items.
+
+## Run with Docker
 
 ```bash
 git clone https://github.com/gisoogholizade-ux/marketplace-backend-api.git
@@ -169,86 +201,31 @@ cd marketplace-backend-api
 docker compose up --build
 ```
 
-API:
+API: `http://localhost:8080`  
+Swagger UI: `http://localhost:8080/swagger-ui.html`
 
-```text
-http://localhost:8080
-```
-
-Swagger UI:
-
-```text
-http://localhost:8080/swagger-ui.html
-```
-
-The Compose environment starts MySQL first, waits for it to become healthy, then starts the API. Flyway creates and upgrades the schema automatically.
-
-## Run without Docker
-
-Requirements: Java 21, Maven and MySQL.
-
-Create a database named `marketplace`, then optionally set:
-
-```bash
-DB_URL=jdbc:mysql://localhost:3306/marketplace
-DB_USERNAME=root
-DB_PASSWORD=your_password
-JWT_SECRET=your-long-development-secret
-```
-
-Run:
-
-```bash
-mvn spring-boot:run
-```
-
-## Tests
+## Run tests
 
 ```bash
 mvn clean verify
 ```
 
-The test suite includes unit tests and application integration tests using an in-memory H2 database in MySQL compatibility mode. Flyway migrations are executed during integration testing so schema problems fail CI early.
-
-## Database migrations
-
-Production schema changes are versioned in:
-
-```text
-src/main/resources/db/migration
-```
-
-Hibernate uses `ddl-auto=validate`; schema creation is owned by Flyway rather than automatic Hibernate updates. Relational constraints enforce valid customer, seller, order and payment references at database level.
-
-## CI
-
-Every push and pull request to `main` runs:
-
-```text
-Java 21 setup -> Maven clean verify -> unit + integration tests
-```
-
-A green CI badge means the current main branch compiles and its automated test suite passes.
+The test profile uses H2 in MySQL compatibility mode and executes all Flyway migrations, so schema problems fail CI early.
 
 ## Engineering decisions
 
-- Controllers stay thin; business rules live in services.
-- Persistence is isolated behind repositories.
-- API input uses validated request DTOs.
-- Authentication is stateless.
-- Secrets and DB credentials are supplied through environment variables.
-- Database changes are repeatable and reviewable through Flyway migrations.
-- Payment transaction references are protected against duplicates.
-- Service validation is backed by database-level relational constraints.
-- CI verifies the repository from a clean environment instead of relying on a developer machine.
-
-## Current version
-
-**1.0.0** — first portfolio-ready release.
+- Controllers remain thin; business rules live in services.
+- Checkout and settlement operations are transactional.
+- Financial workflow state changes are explicit.
+- Commissions are generated after successful payment rather than at checkout.
+- Commission generation is idempotent per order.
+- Database evolution is owned by Flyway; Hibernate validates the schema.
+- Secrets and database credentials come from environment variables.
+- CI verifies the project from a clean environment.
 
 ## About the developer
 
-I'm **Gisoo Gholizade**, a Java developer focused on Spring Boot backend development and business applications. My experience includes authentication, role-based systems, database-driven workflows, marketplace logic, orders, payments, contracts, reporting and operational web applications.
+I'm **Gisoo Gholizade**, a Java developer focused on Spring Boot backend development and business applications, including authentication, role-based systems, marketplace logic, orders, payments, financial workflows and reporting.
 
 **Available for freelance and remote Java / Spring Boot projects.**
 
