@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface CommissionRepository extends JpaRepository<Commission, Long> {
     List<Commission> findAllBySellerIdAndStatus(Long sellerId, CommissionStatus status);
+    boolean existsByOrderId(Long orderId);
 }
