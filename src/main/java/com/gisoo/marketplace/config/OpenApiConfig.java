@@ -17,7 +17,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Marketplace Backend API")
-                        .version("1.0.0")
+                        .version("1.1.0")
                         .description("Production-style marketplace REST API built with Java 21 and Spring Boot 3.")
                         .contact(new Contact().name("Gisoo Gholizade").email("gholizadegisoo@gmail.com")))
                 .addSecurityItem(new SecurityRequirement().addList(schemeName))
