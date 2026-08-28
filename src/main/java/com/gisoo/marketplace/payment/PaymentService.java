@@ -1,5 +1,6 @@
 package com.gisoo.marketplace.payment;
 
+import com.gisoo.marketplace.order.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,9 +10,11 @@ import java.util.List;
 @Service
 public class PaymentService {
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, OrderRepository orderRepository) {
         this.paymentRepository = paymentRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Transactional
@@ -20,12 +23,24 @@ public class PaymentService {
         if (amount == null || amount.signum() <= 0) {
             throw new IllegalArgumentException("Payment amount must be greater than zero");
         }
+        if (!orderRepository.existsById(orderId)) {
+            throw new IllegalArgumentException("Order does not exist");
+        }
+
         String reference = transactionReference == null ? null : transactionReference.trim();
+        if (reference != null && reference.isBlank()) reference = null;
+        if (reference != null && paymentRepository.existsByTransactionReference(reference)) {
+            throw new IllegalArgumentException("Transaction reference already exists");
+        }
+
         return paymentRepository.save(new Payment(orderId, amount, reference));
     }
 
     @Transactional(readOnly = true)
     public List<Payment> forOrder(Long orderId) {
+        if (orderId == null || !orderRepository.existsById(orderId)) {
+            throw new IllegalArgumentException("Order does not exist");
+        }
         return paymentRepository.findAllByOrderIdOrderByCreatedAtDesc(orderId);
     }
 }
