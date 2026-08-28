@@ -7,32 +7,23 @@ import java.time.Instant;
 @Entity
 @Table(name = "payments")
 public class Payment {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private Long orderId;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal amount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 24)
+    @Column(nullable = false) private Long orderId;
+    @Column(nullable = false, precision = 19, scale = 2) private BigDecimal amount;
+    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 24)
     private PaymentStatus status = PaymentStatus.PENDING;
-
-    @Column(length = 120)
-    private String transactionReference;
-
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    @Column(length = 120) private String transactionReference;
+    @Column(nullable = false, updatable = false) private Instant createdAt = Instant.now();
 
     protected Payment() {}
-
     public Payment(Long orderId, BigDecimal amount, String transactionReference) {
-        this.orderId = orderId;
-        this.amount = amount;
-        this.transactionReference = transactionReference;
+        this.orderId = orderId; this.amount = amount; this.transactionReference = transactionReference;
+    }
+
+    public void markSucceeded() {
+        if (status != PaymentStatus.PENDING) throw new IllegalStateException("Only pending payments can succeed");
+        status = PaymentStatus.SUCCEEDED;
     }
 
     public Long getId() { return id; }
